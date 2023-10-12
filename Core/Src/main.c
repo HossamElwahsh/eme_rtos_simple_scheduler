@@ -86,6 +86,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+    SystemCoreClockUpdate();
+
+    /* Interrupt every 1 second */
+    SysTick_Config(SystemCoreClock);
+    SysTick->CTRL = 0;
+    SysTick->VAL = 0;
+    SysTick->CTRL = (SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_CLKSOURCE_Msk);
 
   /* USER CODE END 2 */
 
