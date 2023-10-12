@@ -22,6 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "sos_interface.h"
+#include "sos_tasks_interface.h"
 
 /* USER CODE END Includes */
 
@@ -89,10 +91,40 @@ int main(void)
     SystemCoreClockUpdate();
 
     /* Interrupt every 1 second */
-    SysTick_Config(SystemCoreClock);
+    SysTick_Config(SystemCoreClock/100);
     SysTick->CTRL = 0;
     SysTick->VAL = 0;
     SysTick->CTRL = (SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_CLKSOURCE_Msk);
+
+    /* Init Tasks */
+    st_sos_task_t st_sos_task_red1 = {
+            .vd_ptr_task_func = task_red1_led_blink,
+            .uint8_task_priority = 0,
+            .uint8_task_periodicity = 1
+    };
+
+    st_sos_task_t st_sos_task_red2 = {
+            .vd_ptr_task_func = task_red2_led_blink,
+            .uint8_task_priority = 2,
+            .uint8_task_periodicity = 5
+    };
+
+    st_sos_task_t st_sos_task_yellow = {
+            .vd_ptr_task_func = task_yellow_led_blink,
+            .uint8_task_priority = 1,
+            .uint8_task_periodicity = 2
+    };
+
+    /* add tasks to scheduler */
+    sos_create_task(st_sos_task_red1);
+    sos_create_task(st_sos_task_red2);
+    sos_create_task(st_sos_task_yellow);
+
+    /* break point - verify queue */
+    boolean stop = TRUE;
+
+    /* Start Scheduler */
+    sos_start_scheduler();
 
   /* USER CODE END 2 */
 
@@ -149,10 +181,32 @@ void SystemClock_Config(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_2, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA1 PA2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
