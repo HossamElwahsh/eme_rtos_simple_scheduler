@@ -12,7 +12,7 @@
 static st_sos_tasks gs_st_sos_tasks;
 
 /* Initialize SOS Scheduler State */
-static en_sos_scheduler_state_t gs_en_sos_scheduler_state = SOS_SCH_STATE_IDLE;
+static en_sos_scheduler_state_t gs_en_sos_scheduler_state = SOS_SCH_STATE_STOP;
 
 /* Initialize current tick count */
 static uint16_t_ gs_uint16_current_tick_count = ZERO;
@@ -68,9 +68,10 @@ en_sos_status_t sos_create_task(st_sos_task_t st_a_sos_task)
                 uint8_l_new_task_index = i;
 
                 /* Check if task priority is lower (higher in value) than new task priority */
-                if(gs_st_sos_tasks.st_sos_tasks[i].uint8_task_priority > st_a_sos_task.uint8_task_priority)
+                if(st_a_sos_task.uint8_task_priority < gs_st_sos_tasks.st_sos_tasks[i].uint8_task_priority)
                 {
                     /* new task index is found, break loop */
+                    bool_l_require_shifting = TRUE;
                     break;
                 }
                 else
@@ -101,7 +102,7 @@ en_sos_status_t sos_create_task(st_sos_task_t st_a_sos_task)
                 }
 
                 /* Insert new task in freed spot */
-                FILL_TASK_DATA(gs_st_sos_tasks.st_sos_tasks[gs_st_sos_tasks.uint8_tasks_count], st_a_sos_task);
+                FILL_TASK_DATA(gs_st_sos_tasks.st_sos_tasks[uint8_l_new_task_index], st_a_sos_task);
 
             }
             else if(FALSE == bool_l_require_shifting)
@@ -154,7 +155,7 @@ en_sos_status_t sos_start_scheduler(void)
 
                 for (int i = 0; i < gs_st_sos_tasks.uint8_tasks_count; ++i)
                 {
-                    if((GET_TASK_PERIODICITY(gs_st_sos_tasks.st_sos_tasks[i]) % gs_uint16_current_tick_count) == ZERO)
+                    if(gs_uint16_current_tick_count % (GET_TASK_PERIODICITY(gs_st_sos_tasks.st_sos_tasks[i])) == ZERO)
                     {
                         /* Run Task Function */
                         gs_st_sos_tasks.st_sos_tasks[i].vd_ptr_task_func();
@@ -188,6 +189,13 @@ void sos_tick_event(void)
     /* Increment tick counts */
     gs_uint16_current_tick_count++;
 
-    /* Update scheduler state to RUNNING */
-    gs_en_sos_scheduler_state = SOS_SCH_STATE_RUNNING;
+    /* Update scheduler state to RUNNING if scheduler isn't STOPPED */
+    if(SOS_SCH_STATE_STOP != gs_en_sos_scheduler_state)
+    {
+        gs_en_sos_scheduler_state = SOS_SCH_STATE_RUNNING;
+    }
+    else
+    {
+        /* Do Nothing */
+    }
 }

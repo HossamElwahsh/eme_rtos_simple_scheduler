@@ -42,7 +42,9 @@ typedef uint8_t_ boolean;
 #define DEBUG_STRINGIFY(x) DEBUG_STRINGIFY_IMPL(x)
 
 
+#ifndef NULL
 #define NULL	        (0)
+#endif
 #define NULL_PTR        ((void *) 0)
 
 #define ZERO (0)

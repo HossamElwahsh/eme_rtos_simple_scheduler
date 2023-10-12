@@ -193,6 +193,9 @@ void SysTick_Handler(void)
     {
         /* Notify SOS with tick event */
         sos_tick_event();
+
+        /* reset ticks */
+        uwTick = 0;
     }
     else
     {
